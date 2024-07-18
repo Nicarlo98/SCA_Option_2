@@ -22,6 +22,11 @@ function addBook() {
         if (data.success) {
             alert('Book added successfully!');
             loadBooks();
+            // Close the modal
+            var modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
+            modal.hide();
+            // Clear the form
+            document.getElementById('addBookForm').reset();
         } else {
             alert('Error adding book.');
         }

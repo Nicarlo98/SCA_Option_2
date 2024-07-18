@@ -6,27 +6,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Library Inventory Management System</title>
     <link rel="stylesheet" href="./includes/styles.css">
+    <!-- Add Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 
 <body>
     <div class="container">
         <h1>Library Inventory Management System</h1>
 
-        <div id="addBookForm">
-            <h2>Add New Book</h2>
-            <input type="text" id="title" placeholder="Title">
-            <input type="text" id="author" placeholder="Author">
-            <input type="text" id="genre" placeholder="Genre">
-            <select id="status">
-                <option value="available">Available</option>
-                <option value="checked_out">Checked Out</option>
-            </select>
-            <button onclick="addBook()">Add Book</button>
+        <div class="button-group">
+            <!-- Update the button to open the modal -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBookModal">Add New
+                Book</button>
+        </div>
+
+        <!-- Add Book Modal -->
+        <div class="modal fade" id="addBookModal" tabindex="-1" aria-labelledby="addBookModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addBookModalLabel">Add New Book</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addBookForm">
+                            <div class="form-group">
+                                <label for="title">Title</label>
+                                <input type="text" id="title" name="title" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="author">Author</label>
+                                <input type="text" id="author" name="author" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="genre">Genre</label>
+                                <input type="text" id="genre" name="genre" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select id="status" name="status" class="form-control">
+                                    <option value="available">Available</option>
+                                    <option value="checked_out">Checked Out</option>
+                                </select>
+                            </div>
+                            <div class="text-center mt-4">
+                                <button type="button" onclick="addBook()" class="btn btn-primary">Add Book</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="bookList">
             <h2>Book List</h2>
-            <table id="booksTable">
+            <table id="booksTable" class="table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -41,6 +75,9 @@
             </table>
         </div>
     </div>
+
+    <!-- Add Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./includes/script.js"></script>
 </body>
 
