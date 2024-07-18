@@ -1,3 +1,69 @@
+let currentPage = 1;
+let totalPages = 1;
+
+function loadBooks(page = 1) {
+    // Ensure page is at least 1
+    page = Math.max(1, page);
+    
+    fetch(`api.php?action=list&page=${page}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('API response:', data);
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            if (!Array.isArray(data.books)) {
+                throw new Error('Invalid data format: books is not an array');
+            }
+
+            if (data.books.length === 0 && data.totalBooks > 0) {
+                // There are books, but not on this page
+                currentPage = 1; // Reset to first page
+                loadBooks(1); // Load first page
+                return;
+            }
+
+            updateBookList(data.books);
+            currentPage = data.currentPage || 1;
+            totalPages = data.totalPages || 1;
+            updatePagination();
+        })
+        .catch(error => {
+            console.error('Error in loadBooks:', error);
+            displayErrorMessage("An error occurred while loading books. Please try again. Error: " + error.message);
+        });
+}
+
+function updatePagination() {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#" onclick="return ${currentPage !== 1 ? 'loadBooks(' + (currentPage - 1) + ')' : 'false'}">Previous</a>`;
+    pagination.appendChild(prevLi);
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const li = document.createElement('li');
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#" onclick="return ${i !== currentPage ? 'loadBooks(' + i + ')' : 'false'}">${i}</a>`;
+        pagination.appendChild(li);
+    }
+
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#" onclick="return ${currentPage !== totalPages ? 'loadBooks(' + (currentPage + 1) + ')' : 'false'}">Next</a>`;
+    pagination.appendChild(nextLi);
+}
+
+// Initial load
+loadBooks();
+
 function addBook() {
     const title = document.getElementById('title').value.trim();
     const author = document.getElementById('author').value.trim();
@@ -27,7 +93,7 @@ function addBook() {
     .then(data => {
     if (data.success) {
         showMessage('Book added successfully!');
-        loadBooks();
+        loadBooks(currentPage);
         // Close the modal
         var modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
         modal.hide();
@@ -42,6 +108,9 @@ function addBook() {
     showErrorMessage('An error occurred while adding the book. Please try again.');
 });
 }
+
+
+
 
 function loadBooks() {
     fetch('api.php?action=list')
@@ -126,7 +195,7 @@ function updateBookStatus(id) {
         .then(data => {
             if (data.success) {
                 showMessage('Book status updated successfully!');
-                loadBooks();
+                loadBooks(currentPage);
             } else {
                 showErrorMessage('Error updating book status.');
             }
@@ -162,7 +231,7 @@ function deleteBook(id) {
         .then(data => {
     if (data.success) {
         showMessage('Book deleted successfully!');
-        loadBooks();
+        loadBooks(currentPage);
     } else {
         showErrorMessage('Error deleting book.');
     }
@@ -183,6 +252,10 @@ function searchBooks() {
                 displayErrorMessage("No books found matching your search.");
             } else {
                 updateBookList(data);
+                // Reset pagination for search results
+            currentPage = 1;
+            totalPages = 1;
+            updatePagination();
             }
         })
         .catch(error => {
@@ -223,21 +296,37 @@ function displayErrorMessage(message) {
 }
 
 // Modify the existing loadBooks function
-function loadBooks() {
-    fetch('api.php?action=list')
-        .then(response => response.json())
+function loadBooks(page = 1) {
+    fetch(`api.php?action=list&page=${page}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('API response:', data); // For debugging
+
+            if (!data || typeof data !== 'object') {
+                throw new Error('Invalid data format received from server');
+            }
+
             if (data.error) {
                 displayErrorMessage(data.error);
-            } else if (data.length === 0) {
+            } else if (Array.isArray(data.books) && data.books.length === 0) {
                 displayErrorMessage("No books in the database.");
+            } else if (Array.isArray(data.books)) {
+                updateBookList(data.books);
+                currentPage = data.currentPage || 1;
+                totalPages = data.totalPages || 1;
+                updatePagination();
             } else {
-                updateBookList(data);
+                throw new Error('Unexpected data structure');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            displayErrorMessage("An error occurred while loading books. Please try again.");
+            console.error('Error in loadBooks:', error);
+            displayErrorMessage("An error occurred while loading books. Please try again. Error: " + error.message);
         });
 }
 function showMessage(message, type = 'success') {

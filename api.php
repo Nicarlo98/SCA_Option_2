@@ -5,6 +5,46 @@ ini_set('display_errors', 1);
 
 require_once './config/db_connect.php';
 
+// In the GET request handling section for "list" action
+if ($_SERVER["REQUEST_METHOD"] == "GET" && $_GET["action"] == "list") {
+    $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+    $limit = 10; // Number of books per page
+    $offset = ($page - 1) * $limit;
+
+    // Get total number of books
+    $countSql = "SELECT COUNT(*) as total FROM books";
+    $countResult = $conn->query($countSql);
+    if (!$countResult) {
+        die(json_encode(['error' => 'Count query failed: ' . $conn->error]));
+    }
+    $totalBooks = $countResult->fetch_assoc()['total'];
+
+    // Get books for the current page
+    $sql = "SELECT * FROM books LIMIT ? OFFSET ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        die(json_encode(['error' => 'Prepare failed: ' . $conn->error]));
+    }
+    $stmt->bind_param("ii", $limit, $offset);
+    if (!$stmt->execute()) {
+        die(json_encode(['error' => 'Execute failed: ' . $stmt->error]));
+    }
+    $result = $stmt->get_result();
+
+    $books = [];
+    while ($row = $result->fetch_assoc()) {
+        $books[] = $row;
+    }
+
+    echo json_encode([
+        'books' => $books,
+        'totalBooks' => $totalBooks,
+        'currentPage' => $page,
+        'totalPages' => max(1, ceil($totalBooks / $limit))
+    ]);
+    exit;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
     if ($_GET["action"] == "list") {
         $sql = "SELECT * FROM books";
