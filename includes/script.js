@@ -58,8 +58,8 @@ function loadBooks() {
                     <td>${book.genre}</td>
                     <td>${book.status}</td>
                     <td>
-                        <button onclick="updateBookStatus(${book.id})">Update Status</button>
-                        <button onclick="deleteBook(${book.id})">Delete</button>
+                        <button onclick="updateBookStatus(${book.id})" class="btn btn-warning btn-sm">Update Status</button>
+                        <button onclick="deleteBook(${book.id})" class="btn btn-danger btn-sm">Delete</button>
                     </td>
                 </tr>
             `;
@@ -69,8 +69,48 @@ function loadBooks() {
 }
 
 function updateBookStatus(id) {
-    const newStatus = prompt("Enter new status (available/checked_out):");
-    if (newStatus) {
+    // Create a modal for updating book status
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'updateStatusModal';
+    modal.setAttribute('tabindex', '-1');
+    modal.setAttribute('aria-labelledby', 'updateStatusModalLabel');
+    modal.setAttribute('aria-hidden', 'true');
+
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateStatusModalLabel">Update Book Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateStatusForm">
+                        <div class="form-group">
+                            <label for="newStatus">New Status</label>
+                            <select id="newStatus" class="form-control">
+                                <option value="available">Available</option>
+                                <option value="checked_out">Checked Out</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmUpdateStatus">Update</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+
+    document.getElementById('confirmUpdateStatus').addEventListener('click', function() {
+        const newStatus = document.getElementById('newStatus').value;
+        
         fetch('api.php', {
             method: 'POST',
             headers: {
@@ -85,13 +125,25 @@ function updateBookStatus(id) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                 showMessage('Book status updated successfully!');
+                showMessage('Book status updated successfully!');
                 loadBooks();
             } else {
-                 showMessage('Error updating book status.');
+                showErrorMessage('Error updating book status.');
             }
+            modalInstance.hide();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorMessage('An error occurred while updating the book status.');
+            modalInstance.hide();
+        })
+        .finally(() => {
+            // Remove the modal from the DOM after it's hidden
+            modal.addEventListener('hidden.bs.modal', function () {
+                document.body.removeChild(modal);
+            });
         });
-    }
+    });
 }
 
 function deleteBook(id) {
@@ -152,8 +204,8 @@ function updateBookList(books) {
                 <td>${book.genre}</td>
                 <td>${book.status}</td>
                 <td>
-                    <button onclick="updateBookStatus(${book.id})">Update Status</button>
-                    <button onclick="deleteBook(${book.id})">Delete</button>
+                   <button onclick="updateBookStatus(${book.id})" class="btn btn-warning btn-sm">Update Status</button>
+                    <button onclick="deleteBook(${book.id})" class="btn btn-danger btn-sm">Delete</button>
                 </td>
             </tr>
         `;
