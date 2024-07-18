@@ -25,22 +25,22 @@ function addBook() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            alert('Book added successfully!');
-            loadBooks();
-            // Close the modal
-            var modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
-            modal.hide();
-            // Clear the form
-            document.getElementById('addBookForm').reset();
-        } else {
-            alert(data.message || 'Error adding book.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while adding the book. Please try again.');
-    });
+    if (data.success) {
+        showMessage('Book added successfully!');
+        loadBooks();
+        // Close the modal
+        var modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
+        modal.hide();
+        // Clear the form
+        document.getElementById('addBookForm').reset();
+    } else {
+        showErrorMessage(data.message || 'Error adding book.');
+    }
+})
+.catch(error => {
+    console.error('Error:', error);
+    showErrorMessage('An error occurred while adding the book. Please try again.');
+});
 }
 
 function loadBooks() {
@@ -85,10 +85,10 @@ function updateBookStatus(id) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Book status updated successfully!');
+                 showMessage('Book status updated successfully!');
                 loadBooks();
             } else {
-                alert('Error updating book status.');
+                 showMessage('Error updating book status.');
             }
         });
     }
@@ -108,13 +108,13 @@ function deleteBook(id) {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                alert('Book deleted successfully!');
-                loadBooks();
-            } else {
-                alert('Error deleting book.');
-            }
-        });
+    if (data.success) {
+        showMessage('Book deleted successfully!');
+        loadBooks();
+    } else {
+        showErrorMessage('Error deleting book.');
+    }
+});
     }
 }
 
@@ -134,9 +134,9 @@ function searchBooks() {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            displayErrorMessage("An error occurred while searching. Please try again.");
-        });
+    console.error('Error:', error);
+    showErrorMessage("An error occurred while searching. Please try again.");
+});
 }
 
 function updateBookList(books) {
@@ -187,6 +187,30 @@ function loadBooks() {
             console.error('Error:', error);
             displayErrorMessage("An error occurred while loading books. Please try again.");
         });
+}
+function showMessage(message, type = 'success') {
+    const messageContainer = document.getElementById('messageContainer');
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    messageContainer.innerHTML = alertHtml;
+
+    // Automatically remove the alert after 5 seconds
+    setTimeout(() => {
+        const alert = messageContainer.querySelector('.alert');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 3000);
+}
+
+function showErrorMessage(message) {
+    showMessage(message, 'error');
 }
 
 
