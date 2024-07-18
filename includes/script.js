@@ -91,25 +91,23 @@ function addBook() {
     })
     .then(response => response.json())
     .then(data => {
-    if (data.success) {
-        showMessage('Book added successfully!');
-        loadBooks(currentPage);
-        // Close the modal
-        var modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
-        modal.hide();
-        // Clear the form
-        document.getElementById('addBookForm').reset();
-    } else {
-        showErrorMessage(data.message || 'Error adding book.');
-    }
-})
-.catch(error => {
-    console.error('Error:', error);
-    showErrorMessage('An error occurred while adding the book. Please try again.');
-});
+        if (data.success) {
+            showMessage(`Book added successfully! Book ID: ${data.bookId}`);
+            loadBooks(currentPage);
+            // Close the modal
+            var modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
+            modal.hide();
+            // Clear the form
+            document.getElementById('addBookForm').reset();
+        } else {
+            showErrorMessage(data.message || 'Error adding book.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showErrorMessage('An error occurred while adding the book. Please try again.');
+    });
 }
-
-
 
 
 function loadBooks() {
@@ -229,13 +227,17 @@ function deleteBook(id) {
         })
         .then(response => response.json())
         .then(data => {
-    if (data.success) {
-        showMessage('Book deleted successfully!');
-        loadBooks(currentPage);
-    } else {
-        showErrorMessage('Error deleting book.');
-    }
-});
+            if (data.success) {
+                showMessage('Book deleted successfully!');
+                loadBooks(currentPage);
+            } else {
+                showErrorMessage('Error deleting book.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorMessage('An error occurred while deleting the book.');
+        });
     }
 }
 
@@ -277,8 +279,8 @@ function updateBookList(books) {
                 <td>${book.genre}</td>
                 <td>${book.status}</td>
                 <td>
-                   <button onclick="updateBookStatus(${book.id})" class="btn btn-warning btn-sm">Update Status</button>
-                    <button onclick="deleteBook(${book.id})" class="btn btn-danger btn-sm">Delete</button>
+                   <button class="btn btn-warning btn-sm update-status" data-book-id="${book.id}">Update Status</button>
+                   <button class="btn btn-danger btn-sm delete-book" data-book-id="${book.id}">Delete</button>
                 </td>
             </tr>
         `;
@@ -353,7 +355,51 @@ function showMessage(message, type = 'success') {
 function showErrorMessage(message) {
     showMessage(message, 'error');
 }
+document.addEventListener('DOMContentLoaded', function() {
+    // Initial load of books
+    loadBooks();
 
+    // Add event listener for the book list table
+    const booksTableBody = document.getElementById('booksTableBody');
+    if (booksTableBody) {
+        booksTableBody.addEventListener('click', function(e) {
+            if (e.target.classList.contains('update-status')) {
+                const bookId = e.target.getAttribute('data-book-id');
+                updateBookStatus(bookId);
+            } else if (e.target.classList.contains('delete-book')) {
+                const bookId = e.target.getAttribute('data-book-id');
+                deleteBook(bookId);
+            }
+        });
+    }
+
+    // Add event listener for the search button
+    const searchButton = document.getElementById('searchButton');
+    if (searchButton) {
+        searchButton.addEventListener('click', searchBooks);
+    }
+
+    // Add event listener for the add book form submission
+    const addBookForm = document.getElementById('addBookForm');
+    if (addBookForm) {
+        addBookForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addBook();
+        });
+    }
+
+    // Add event listener for the search input (for real-time search)
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            if (this.value.length >= 3) {
+                searchBooks();
+            } else if (this.value.length === 0) {
+                loadBooks();
+            }
+        });
+    }
+});
 
 // Load books when the page loads
 window.onload = loadBooks;
